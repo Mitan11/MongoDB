@@ -304,6 +304,80 @@ db.users.find({ name: "Alice" }).limit(1);
 - **Multiple Conditions:** `db.users.find({ age: { $gte: 18, $lt: 65 } })`
 - **Counting:** `db.users.find({ age: { $gt: 25 } }).count()`
 
+**Pattern Matching (LIKE using $regex):**
+```javascript
+// Sample data
+db.users.insertMany([
+  { name: "Alice",   username: "user.01", status: "active",   age: 22 },
+  { name: "ALIyah",  username: "user02",  status: "inactive", age: 17 },
+  { name: "Binali",  username: "user03",  status: "active",   age: 30 },
+  { name: "Kalindi", username: "user04",  status: "active",   age: 28 }
+]);
+
+// Contains (LIKE "%ali%")
+db.users.find({ name: { $regex: "ali" } });
+// Matches: "Alice", "Binali" (because both contain "ali")
+
+// Starts with (LIKE "Ali%")
+db.users.find({ name: { $regex: "^Ali" } });
+// Matches: "Alice" only (must start with Ali)
+
+// Ends with (LIKE "%ali")
+db.users.find({ name: { $regex: "ali$" } });
+// Matches: "Binali" (name ends with ali)
+
+// Case-insensitive (i flag)
+db.users.find({ name: { $regex: "ali", $options: "i" } });
+// Matches: "Alice", "ALIyah", "Binali", "Kalindi" (any case of ali)
+
+// Escape special characters (e.g., a dot)
+db.users.find({ username: { $regex: "^user\\.01$" } });
+// Matches: username exactly "user.01"
+```
+- **LIKE equivalent:** MongoDB does not have SQL `LIKE`; use `$regex`.
+- **Anchors:** `^` start, `$` end. `.*` matches any characters.
+- **Performance:** Prefix-anchored patterns like `^Ali` can use an index on the field.
+
+Quick examples (movies):
+```javascript
+// Starts with 3 and ends with s → matches: "3 Idiots"
+db.movies.find({ title: { $regex: "^3.*s$" } });
+
+// Case-insensitive variant
+db.movies.find({ title: { $regex: "^3.*s$", $options: "i" } });
+```
+
+**Logical Operators ($or, $and, $not):**
+```javascript
+// Using the same sample data inserted above
+
+// $or: either condition matches
+db.users.find({ $or: [{ age: { $lt: 18 } }, { status: "inactive" }] });
+// Matches: any user younger than 18 OR with status inactive
+// From sample: "ALIyah" (age 17 AND inactive)
+
+// $and: both conditions must match (equivalent to combining in one object)
+db.users.find({ $and: [{ age: { $gte: 18 } }, { age: { $lt: 65 } }] });
+// Equivalent shorter form:
+db.users.find({ age: { $gte: 18, $lt: 65 } });
+// Matches: all adults between 18 and 64 inclusive of lower bound, exclusive of 65
+// From sample: "Alice" (22), "Binali" (30), "Kalindi" (28)
+
+// $not: negates a condition (wraps an operator expression)
+db.users.find({ age: { $not: { $lt: 18 } } }); // age >= 18
+// Matches: users NOT younger than 18 (i.e., 18 and above)
+// From sample: "Alice", "Binali", "Kalindi"
+
+// $nor: none of the conditions match
+db.users.find({ $nor: [{ status: "active" }, { role: "admin" }] });
+// Matches: users who are NOT active AND do NOT have role admin
+// From sample: "ALIyah" (inactive; assuming no role field)
+```
+- **$or:** Array of expressions; matches if any are true.
+- **$and:** Usually unnecessary; combine operators on the same field in one object.
+- **$not:** Use to negate an operator expression; it does not mean "field not equal" by itself.
+- **Tip:** Prefer direct operators like `{ field: { $ne: value } }` over `$not` when possible.
+
 **Field Selection (Projection):**
 ```javascript
 db.users.find({}, { name: 1, age: 1 });
