@@ -71,3 +71,61 @@ db.MenuItem.find({ ItemName: { $regex: "chi", $options: "i" } }); // contains 'c
 // Rename collection
 db.MenuItem.renameCollection("MenuItems");
 ```
+
+Exercise: Music collection
+
+```javascript
+// Switch to the 'entertainmentDB' database. Creates it if it doesn't exist.
+use entertainmentDB
+
+// Explicitly create the 'music' collection
+db.createCollection("music")
+
+// Insert multiple song documents into the 'music' collection
+db.music.insertMany([
+{song_id : 1, title : "Tum Hi Ho", artist:"Arjit Singh" , album : "Aashiqui 2" , genre : ["Romantic" , "Bollywood"], year : 2013 , streams : 5000000 },
+{song_id : 2, title : "Senorita", artist:"Shawn Mendes" , album : "Single" , genre : ["Pop"], year : 2019 , streams : 7500000 },
+{song_id : 3, title : "Apna Bana Le", artist:"Arjit Singh" , album : "Bhediya" , genre : ["Romantic" , "Bollywood"], year : 2022 , streams : 4200000 },
+{song_id : 4, title : "Believer", artist:"Imagine Dragons" , album : "Evolve" , genre : ["Rock" , "Pop"], year : 2017 , streams : 1200000 },
+{song_id : 5, title : "Kesariya", artist:"Arjit Singh" , album : "Brahmastra" , genre : ["Romantic" , "Bollywood"], year : 2022 , streams : 9500000 }
+])
+
+// Retrieve all documents from the 'music' collection
+db.music.find()
+
+// Create a descending index on the 'title' field of the 'movie' collection for faster sorting/searching
+db.movie.createIndex({title: -1})
+
+// List all indexes on the 'movie' collection
+db.movie.getIndexes()
+
+// Drop the specified index from the 'movie' collection
+db.movie.dropIndex({title: 1})
+
+// Limit the output to the first 2 documents
+db.music.find().limit(2)
+
+// Skip the first document and return the next 2 (for pagination)
+db.music.find().limit(2).skip(1)
+
+// Find songs where the album name starts with 'B'
+db.music.find({ album: { $regex: "^B" } })
+
+// Find songs released after the year 2019
+db.music.find({year : {$gt : 2019}})
+
+// Find songs where the artist's name starts with 'A' and ends with 'h'
+db.music.find({artist: { $regex: "^A.*h$" }})
+
+// Find songs where the title is exactly 8 characters long
+db.music.find({title : { $regex: "^.{8}$"}})
+
+// Find songs where the title starts with 'S' and is 8 characters long
+db.music.find({ title : { $regex: "^S.{7}$"}})
+
+// Find songs where the album name starts with 'b' (case-insensitive)
+db.music.find({ album: { $regex: "^b" ,  $options: "i" } })
+
+// Find songs where the artist's name starts with 'a' and ends with 'h' (case-insensitive)
+db.music.find({artist: { $regex: "^a.*h$" ,  $options: "i" }})
+```

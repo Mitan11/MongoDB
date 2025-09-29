@@ -290,7 +290,7 @@ db.users.find({ age: { $lte: 65 } });       // age <= 65
 db.users.find({ status: { $ne: "inactive" } }); // status != "inactive"
 ```
 
-**Query with Limits:**
+**Query with Limits and Skip (Pagination):**
 ```javascript
 db.users.find({ name: "Alice" }).limit(1);
 ```
@@ -299,6 +299,13 @@ db.users.find({ name: "Alice" }).limit(1);
 - **Behavior:** Returns the first matching document found
 - **Use Case:** When you expect multiple matches but only need one result
 - **Performance:** Stops searching after finding the specified number of documents
+
+```javascript
+// Skip the first result and return the next 2
+db.music.find().limit(2).skip(1)
+```
+- **Skip:** `.skip(n)` bypasses the first `n` documents in the result set.
+- **Pagination:** Combining `limit()` and `skip()` is a common way to implement pagination. For example, to show 10 items per page, you would use `limit(10)` and adjust `skip()` for each page (`skip(0)`, `skip(10)`, `skip(20)`, etc.).
 
 **Advanced Query Features:**
 - **Multiple Conditions:** `db.users.find({ age: { $gte: 18, $lt: 65 } })`
@@ -329,6 +336,12 @@ db.users.find({ name: { $regex: "ali$" } });
 // Case-insensitive (i flag)
 db.users.find({ name: { $regex: "ali", $options: "i" } });
 // Matches: "Alice", "ALIyah", "Binali", "Kalindi" (any case of ali)
+
+// Match a specific length (8 characters)
+db.music.find({title : { $regex: "^.{8}$"}})
+
+// Match a string starting with 'S' and having a total length of 8 characters
+db.music.find({ title : { $regex: "^S.{7}$"}})
 
 // Escape special characters (e.g., a dot)
 db.users.find({ username: { $regex: "^user\\.01$" } });
@@ -481,4 +494,28 @@ This reference demonstrates two main document structures:
   status: "active"               // String: Account status
 }
 ```
+
+### 8. Indexing
+
+Indexes support the efficient execution of queries in MongoDB. Without indexes, MongoDB must perform a collection scan, i.e., scan every document in a collection, to select those documents that match the query statement.
+
+**Create an Index:**
+```javascript
+// Create a single field index on the 'title' field in descending order
+db.movie.createIndex({title: -1})
+```
+- **Purpose:** Creates an index on a specified field. `1` is for ascending order and `-1` is for descending order.
+- **Behavior:** Speeds up queries that sort or filter on the indexed field.
+
+**List Indexes:**
+```javascript
+db.movie.getIndexes()
+```
+- **Purpose:** Returns an array of documents that describe the existing indexes on the collection.
+
+**Drop an Index:**
+```javascript
+db.movie.dropIndex({title: 1})
+```
+- **Purpose:** Removes a specified index from a collection. The argument to `dropIndex` should be the key pattern of the index to drop.
 
