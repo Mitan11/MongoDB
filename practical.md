@@ -129,3 +129,100 @@ db.music.find({ album: { $regex: "^b" ,  $options: "i" } })
 // Find songs where the artist's name starts with 'a' and ends with 'h' (case-insensitive)
 db.music.find({artist: { $regex: "^a.*h$" ,  $options: "i" }})
 ```
+
+Exercise: Shopping Cart collection
+
+```javascript
+// Create the 'shoppingCart' collection
+db.createCollection("shoppingCart")
+
+// Insert multiple documents into the 'shoppingCart' collection
+db.shoppingCart.insertMany([
+
+{
+	"cart_id" : 1 ,
+	"customer" : "Aditi",
+	"items" : ["Apples" , "Bananas"],
+	"status" : "Pending",
+	"total" : 200
+},
+
+{
+	"cart_id" : 2 ,
+	"customer" : "Rohan",
+	"items" : ["Milk" , "Bread" , "Eggs"],
+	"status" : "Pending",
+	"total" : 150
+},
+
+{
+	"cart_id" : 3 ,
+	"customer" : "Priya",
+	"items" : ["Rice" , "Dal"],
+	"status" : "confirmed",
+	"total" : 500
+},
+
+{
+	"cart_id" : 4 ,
+	"customer" : "Rakshit",
+	"items" : ["PS5" , "Orange"],
+	"status" : "confirmed",
+	"total" : 51000
+},
+
+{
+	"cart_id" : 5 ,
+	"customer" : "Riddhi",
+	"items" : ["Curd" , "Butter Milk" , "Panner"],
+	"status" : "Pending",
+	"total" : 100
+}
+
+])
+
+// Retrieve all documents from the 'shoppingCart' collection
+db.shoppingCart.find()
+
+// Sort the results by customer name in ascending order
+db.shoppingCart.find().sort("customer")
+
+// Sort the results by total in descending order
+db.shoppingCart.find().sort({"total" : -1})
+
+// Find carts with "Pending" status and total greater than 180
+db.shoppingCart.find({"status" : "Pending" , "total" : {"$gt" : 180}})
+
+// Find carts belonging to either "Priya" or "Aditi"
+db.shoppingCart.find({"customer": { "$in": ["Priya", "Aditi"] } })
+
+// Find carts where the status is not "confirmed"
+db.shoppingCart.find({ "status": { "$ne": "confirmed" } })
+
+// Find carts with a total less than 200
+db.shoppingCart.find({"total" : {"$lt" : 200}})
+
+// Find carts with a total greater than or equal to 500
+db.shoppingCart.find({"total" : {"$gte" : 500}})
+
+// Find customers whose name starts with 'P'
+db.shoppingCart.find({"customer" : {"$regex" : "^P"}})
+
+// Find customers whose name ends with 'n'
+db.shoppingCart.find({"customer" : {"$regex" : "n$"}})
+
+// Find customers whose name is exactly 5 characters long
+db.shoppingCart.find({"customer" : {"$regex" : "^.{5}$"}})
+
+// Find customer "aditi" case-insensitively
+db.shoppingCart.find({"customer" : {"$regex" : "aditi" , "$options" : "i"}})
+
+// Limit the results to the first 2 documents
+db.shoppingCart.find().limit(2)
+
+// Delete the cart with cart_id 2
+db.shoppingCart.deleteOne({"cart_id" : 2})
+
+// Delete all carts with "Pending" status
+db.shoppingCart.deleteMany({"status" : "Pending"})
+```
