@@ -220,6 +220,74 @@ db.student.updateMany(
 - **$pull:** Removes elements from arrays
 - **$rename:** Renames fields
 
+### Array Update Operators (push, pull, addToSet, pullAll)
+MongoDB provides several operators specialized for updating array fields. These are essential when you need to add or remove items inside array fields without replacing the entire array.
+
+**$push (single element)**
+```javascript
+// Add a single element to an array field
+db.students.updateOne({ name: "Alice" }, { $push: { skills: "TypeScript" } });
+```
+- Appends the element to the end of the array.
+
+**$push with $each (multiple elements)**
+```javascript
+// Add multiple elements to an array in a single operation
+db.students.updateOne({ name: "Bob" }, { $push: { skills: { $each: ["Go", "Rust"] } } });
+```
+- Use `$each` to push multiple values in one operation. More efficient and atomic than multiple $push calls.
+
+**$push with $position and $slice (controlled insert / keep top N)**
+```javascript
+// Insert 'x' at the beginning of the array
+db.collection.updateOne({ _id: 1 }, { $push: { tags: { $each: ["x"], $position: 0 } } });
+
+// Push and keep only the top 5 newest elements
+db.collection.updateOne({ _id: 1 }, { $push: { history: { $each: [newEntry], $slice: -5 } } });
+```
+- `$position` specifies the index to insert at. `$slice` can trim the array after push.
+
+**$addToSet (avoid duplicates)**
+```javascript
+// Add a value only if it doesn't already exist in the array
+db.students.updateOne({ name: "Bob" }, { $addToSet: { skills: "Go" } });
+```
+- Ensures uniqueness; if the value exists, the array is not modified.
+
+**$pull (remove matching values or by condition)**
+```javascript
+// Remove the element 'Panner' from the items array
+db.shoppingCart.updateOne({ cart_id: 5 }, { $pull: { items: "Panner" } });
+
+// Remove all scores less than 50 from every document
+db.collection.updateMany({}, { $pull: { scores: { $lt: 50 } } });
+```
+- `$pull` removes elements that match the given value or query expression.
+
+**$pullAll (remove multiple specified values)**
+```javascript
+// Remove all occurrences of 'a' and 'b' from tags array
+db.collection.updateOne({ _id: 1 }, { $pullAll: { tags: ["a", "b"] } });
+```
+- `$pullAll` removes all matching elements listed in the array argument.
+
+**$pop (remove first or last element)**
+```javascript
+// Remove the first element from the array
+db.collection.updateOne({ _id: 1 }, { $pop: { items: -1 } });
+
+// Remove the last element from the array
+db.collection.updateOne({ _id: 1 }, { $pop: { items: 1 } });
+```
+- Use `-1` to remove the first element, `1` to remove the last element.
+
+
+**Notes and tips:**
+- Use `$each` when pushing multiple values to avoid multiple round-trips and to keep the operation atomic.
+- Prefer `$addToSet` when you want to maintain uniqueness in arrays.
+- Use conditional `$pull` queries (e.g., `$lt`, `$gte`) to remove items by predicate.
+- When performing many array updates, consider schema design and whether storing subdocuments or separate collections is more appropriate for performance and querying.
+
 ### 5. Delete Documents
 
 Delete operations permanently remove documents from collections. Use with caution as these operations cannot be undone.

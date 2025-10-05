@@ -225,4 +225,118 @@ db.shoppingCart.deleteOne({"cart_id" : 2})
 
 // Delete all carts with "Pending" status
 db.shoppingCart.deleteMany({"status" : "Pending"})
+
+// Skip the first 2 documents and return the next 1 (prints the 3rd cart)
+// Useful when you want a single item from a specific offset
+db.shoppingCart.find().limit(1).skip(2)
+
+// Update the status of the cart with cart_id 1 to "Pending"
+// updateOne(filter, update) modifies the first matching document
+db.shoppingCart.updateOne({"cart_id": 1}, { $set: { "status": "Pending" } })
+
+// Update all carts with status "Pending" to have status "In-Progress"
+// Useful to change workflow state for multiple orders at once
+db.shoppingCart.updateMany({"status" : "Pending"},{$set : {"status" : "In-Progress"}})
+```
+
+Exercise: Flights collection
+
+```javascript
+
+// Insert multiple flight documents into the 'flights' collection
+db.flights.insertMany([
+  {
+    flight_no: "AI101",
+    airline: "Air India",
+    source: "Delhi",
+    destination: "Mumbai",
+    departure_time: "2025-10-05T06:00:00",
+    arrival_time: "2025-10-05T08:00:00",
+    price: 5000,
+    status: "On Time"
+  },
+  {
+    flight_no: "SG201",
+    airline: "SpiceJet",
+    source: "Mumbai",
+    destination: "Bangalore",
+    departure_time: "2025-10-05T09:30:00",
+    arrival_time: "2025-10-05T11:30:00",
+    price: 4500,
+    status: "Delayed"
+  },
+  {
+    flight_no: "6E301",
+    airline: "IndiGo",
+    source: "Bangalore",
+    destination: "Chennai",
+    departure_time: "2025-10-05T12:00:00",
+    arrival_time: "2025-10-05T13:00:00",
+    price: 3500,
+    status: "On Time"
+  },
+  {
+    flight_no: "AI102",
+    airline: "Air India",
+    source: "Chennai",
+    destination: "Kolkata",
+    departure_time: "2025-10-05T14:00:00",
+    arrival_time: "2025-10-05T16:30:00",
+    price: 6000,
+    status: "Cancelled"
+  },
+  {
+    flight_no: "SG202",
+    airline: "SpiceJet",
+    source: "Kolkata",
+    destination: "Delhi",
+    departure_time: "2025-10-05T17:00:00",
+    arrival_time: "2025-10-05T19:30:00",
+    price: 5500,
+    status: "On Time"
+  },
+  {
+    flight_no: "6E302",
+    airline: "IndiGo",
+    source: "Delhi",
+    destination: "Hyderabad",
+    departure_time: "2025-10-05T20:00:00",
+    arrival_time: "2025-10-05T22:30:00",
+    price: 5000,
+    status: "Delayed"
+  },
+  {
+    flight_no: "AI103",
+    airline: "Air India",
+    source: "Hyderabad",
+    destination: "Mumbai",
+    departure_time: "2025-10-05T23:00:00",
+    arrival_time: "2025-10-06T01:00:00",
+    price: 4800,
+    status: "On Time"
+  },
+  {
+    flight_no: "SG203",
+    airline: "SpiceJet",
+    source: "Mumbai",
+    destination: "Delhi",
+    departure_time: "2025-10-06T02:00:00",
+    arrival_time: "2025-10-06T04:30:00",
+    price: 5200,
+    status: "On Time"
+  }
+]);
+
+// Example queries you might run after insertion:
+// List all flights
+// db.flights.find();
+
+// Find flights from Mumbai
+// db.flights.find({ source: "Mumbai" });
+
+// Find flights that are delayed
+// db.flights.find({ status: "Delayed" });
+
+// Find flights with price <= 5000 sorted by price ascending
+// db.flights.find({ price: { $lte: 5000 } }).sort({ price: 1 });
 ```
