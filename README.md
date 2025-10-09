@@ -582,7 +582,44 @@ db.movies.aggregate([
 ```
 
 #### 2) Filtering documents — `$match`
-- Filters documents using standard query operators: `$gt`, `$lt`, `$gte`, `$lte`, `$in`, `$nin`, `$and`, `$or`, `$not`, `$exists`, `$regex`.
+- Filters documents using standard query operators: `$eq`,`$ne`, `$gt`, `$lt`, `$gte`, `$lte`, `$in`, `$nin`, `$and`, `$or`, `$not`, `$exists`, `$regex`.
+
+Examples:
+```javascript
+// $eq – equal to
+{ $match: { status: { $eq: "Delayed" } } }
+
+// $ne – not equal to
+{ $match: { status: { $ne: "Cancelled" } } }
+
+// $gt / $lt – greater/less than
+{ $match: { price: { $gt: 100 } } }
+{ $match: { price: { $lt: 50 } } }
+
+// $gte / $lte – greater/less than or equal
+{ $match: { rating: { $gte: 4.5 } } }
+{ $match: { rating: { $lte: 2 } } }
+
+// $in / $nin – value is (not) in array
+{ $match: { airline: { $in: ["Delta", "United"] } } }
+{ $match: { airline: { $nin: ["Spirit", "Frontier"] } } }
+
+// $and – all conditions must match
+{ $match: { $and: [ { status: "On Time" }, { price: { $lt: 300 } } ] } }
+
+// $or – any condition may match
+{ $match: { $or: [ { status: "On Time" }, { status: "Delayed" } ] } }
+
+// $not – negate a condition (wraps another operator)
+{ $match: { price: { $not: { $gt: 500 } } } } // price <= 500
+
+// $exists – field presence (not value)
+{ $match: { couponCode: { $exists: true } } }
+
+// $regex – pattern match (use with options)
+{ $match: { flightNumber: { $regex: "^UA", $options: "i" } } }
+```
+
 - Use early `$match` to reduce work for later stages.
 
 Example:
@@ -609,7 +646,30 @@ Example:
 ```
 
 #### 5) Grouping and aggregation — `$group`
-- Aggregate values by a key using `$group` with accumulators: `$sum`, `$avg`, `$min`, `$max`, `$push`.
+- Aggregate values by a key using `$group` with accumulators: `$sum`, `$avg`, `$min`, `$max`, `$push`,`$push`, `$count`, `$addToSet`.
+
+Examples (accumulators):
+```javascript
+// $sum – count docs or sum a numeric field
+{ $group: { _id: "$airline", totalFlights: { $sum: 1 } } }
+{ $group: { _id: "$airline", totalPrice: { $sum: "$price" } } }
+
+// $avg – average of numeric field
+{ $group: { _id: "$airline", avgPrice: { $avg: "$price" } } }
+
+// $min / $max – min/max value of a field
+{ $group: { _id: "$airline", minPrice: { $min: "$price" }, maxPrice: { $max: "$price" } } }
+
+// $push – collect values into an array (may contain duplicates)
+{ $group: { _id: "$airline", flightIds: { $push: "$flightId" } } }
+
+// $addToSet – collect unique values into a set (removes duplicates)
+{ $group: { _id: "$airline", uniqueDestinations: { $addToSet: "$destination" } } }
+
+// $count – available as its own stage; to count within $group use $sum: 1
+{ $count: "totalFlights" }
+{ $group: { _id: null, totalFlights: { $sum: 1 } } }
+```
 
 Example:
 ```javascript
@@ -638,6 +698,27 @@ Example:
 - `$unwind` — deconstruct arrays into documents
 - `$replaceRoot` / `$replaceWith` — replace the root document
 - `$facet` — run multiple pipelines in parallel and collect results
+
+Examples:
+```javascript
+// $sort – sort by fields (desc: -1, asc: 1)
+{ $sort: { avgPrice: -1, airline: 1 } }
+
+// $limit – keep first N documents
+{ $limit: 10 }
+
+// $skip – skip first N documents (use with $limit for pagination)
+{ $skip: 20 }
+
+// $addFields – add a computed field (aka your "$addToField")
+{ $addFields: { totalCost: { $add: ["$price", "$fee"] } } }
+
+// $lookup – join additional data from another collection
+{ $lookup: { from: "reviews", localField: "mid", foreignField: "movie_id", as: "reviews" } }
+
+// $unwind – explode an array into multiple documents
+{ $unwind: "$reviews" }
+```
 
 #### 9) Short example pipeline (find average price by airline for on-time flights)
 ```javascript
