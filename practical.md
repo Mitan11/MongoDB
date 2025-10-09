@@ -239,104 +239,294 @@ db.shoppingCart.updateOne({"cart_id": 1}, { $set: { "status": "Pending" } })
 db.shoppingCart.updateMany({"status" : "Pending"},{$set : {"status" : "In-Progress"}})
 ```
 
-Exercise: Flights collection
+Exercise: New movies and reviews (insertions + example aggregation queries)
 
 ```javascript
-
-// Insert multiple flight documents into the 'flights' collection
-db.flights.insertMany([
+new mocies db.movies.insertMany([
   {
-    flight_no: "AI101",
-    airline: "Air India",
-    source: "Delhi",
-    destination: "Mumbai",
-    departure_time: "2025-10-05T06:00:00",
-    arrival_time: "2025-10-05T08:00:00",
-    price: 5000,
-    status: "On Time"
+    mid: 1,
+    title: "Rocky Reborn",
+    genre: ["Sport", "Drama"],
+    rating: 8.5,
+    year: 2018,
+    director: "Alex Stone",
+    boxOffice: 95000000
   },
   {
-    flight_no: "SG201",
-    airline: "SpiceJet",
-    source: "Mumbai",
-    destination: "Bangalore",
-    departure_time: "2025-10-05T09:30:00",
-    arrival_time: "2025-10-05T11:30:00",
-    price: 4500,
-    status: "Delayed"
+    mid: 2,
+    title: "Laugh Out Loud",
+    genre: ["Comedy"],
+    rating: 7.2,
+    year: 2016,
+    director: "Amy Johnson",
+    boxOffice: 60000000
   },
   {
-    flight_no: "6E301",
-    airline: "IndiGo",
-    source: "Bangalore",
-    destination: "Chennai",
-    departure_time: "2025-10-05T12:00:00",
-    arrival_time: "2025-10-05T13:00:00",
-    price: 3500,
-    status: "On Time"
+    mid: 3,
+    title: "Code of Honor",
+    genre: ["Action", "Thriller"],
+    rating: 9.0,
+    year: 2021,
+    director: "Arjun Mehta",
+    boxOffice: 120000000
   },
   {
-    flight_no: "AI102",
-    airline: "Air India",
-    source: "Chennai",
-    destination: "Kolkata",
-    departure_time: "2025-10-05T14:00:00",
-    arrival_time: "2025-10-05T16:30:00",
-    price: 6000,
-    status: "Cancelled"
+    mid: 4,
+    title: "Soul of Music",
+    genre: ["Drama", "Musical"],
+    rating: 8.0,
+    year: 2019,
+    director: "Ariana Blake",
+    boxOffice: 87000000
   },
   {
-    flight_no: "SG202",
-    airline: "SpiceJet",
-    source: "Kolkata",
-    destination: "Delhi",
-    departure_time: "2025-10-05T17:00:00",
-    arrival_time: "2025-10-05T19:30:00",
-    price: 5500,
-    status: "On Time"
+    mid: 5,
+    title: "The Last Laugh",
+    genre: ["Comedy", "Drama"],
+    rating: 6.8,
+    year: 2014,
+    director: "Brian Carter",
+    boxOffice: 45000000
   },
   {
-    flight_no: "6E302",
-    airline: "IndiGo",
-    source: "Delhi",
-    destination: "Hyderabad",
-    departure_time: "2025-10-05T20:00:00",
-    arrival_time: "2025-10-05T22:30:00",
-    price: 5000,
-    status: "Delayed"
+    mid: 6,
+    title: "Champions League",
+    genre: ["Sport"],
+    rating: 8.9,
+    year: 2020,
+    director: "Ankit Sharma",
+    boxOffice: 130000000
   },
   {
-    flight_no: "AI103",
-    airline: "Air India",
-    source: "Hyderabad",
-    destination: "Mumbai",
-    departure_time: "2025-10-05T23:00:00",
-    arrival_time: "2025-10-06T01:00:00",
-    price: 4800,
-    status: "On Time"
+    mid: 7,
+    title: "Into the Shadows",
+    genre: ["Thriller", "Horror"],
+    rating: 7.5,
+    year: 2017,
+    director: "Chris Nolan",
+    boxOffice: 75000000
   },
   {
-    flight_no: "SG203",
-    airline: "SpiceJet",
-    source: "Mumbai",
-    destination: "Delhi",
-    departure_time: "2025-10-06T02:00:00",
-    arrival_time: "2025-10-06T04:30:00",
-    price: 5200,
-    status: "On Time"
+    mid: 8,
+    title: "Smiles of Spring",
+    genre: ["Romance", "Comedy"],
+    rating: 7.8,
+    year: 2022,
+    director: "Aarav Patel",
+    boxOffice: 56000000
   }
-]);
+])
 
-// Example queries you might run after insertion:
-// List all flights
-// db.flights.find();
+db.reviews.insertMany([
+  { movie_id: 1, reviewer: "Alice", comment: "Loved the drama and sport blend!", stars: 5 },
+  { movie_id: 1, reviewer: "Bob", comment: "Strong story and acting.", stars: 4 },
+  { movie_id: 2, reviewer: "Charlie", comment: "Hilarious and light-hearted.", stars: 4 },
+  { movie_id: 3, reviewer: "David", comment: "Intense and thrilling!", stars: 5 },
+  { movie_id: 4, reviewer: "Eve", comment: "Beautiful music and visuals.", stars: 4 },
+  { movie_id: 5, reviewer: "Frank", comment: "Could be funnier.", stars: 3 },
+  { movie_id: 6, reviewer: "Grace", comment: "Best sports movie ever!", stars: 5 },
+  { movie_id: 7, reviewer: "Henry", comment: "Dark and interesting plot.", stars: 4 },
+  { movie_id: 8, reviewer: "Isla", comment: "Feel-good romantic comedy.", stars: 5 }
+])
 
-// Find flights from Mumbai
-// db.flights.find({ source: "Mumbai" });
+db.movies.aggregate([{
+    "$match" : {"year" : {"$gt" : 2015}}
+}])
 
-// Find flights that are delayed
-// db.flights.find({ status: "Delayed" });
 
-// Find flights with price <= 5000 sorted by price ascending
-// db.flights.find({ price: { $lte: 5000 } }).sort({ price: 1 });
+db.movies.aggregate([{
+    "$match" : {"genre" : {"$in" : ["Sport" , "Comedy"]}}
+}])
+
+
+db.movies.aggregate([{
+    "$match" : {"genre" : {"$nin" : ["Sports" , "Comedy"]}}
+}])
+
+
+db.movies.aggregate([{
+    "$match" : {"$and" : [{"rating" : {"$lt" : 8}} , {"year" : {"$lt" : 2020 }}] }
+}])
+
+
+db.movies.aggregate([{
+    "$match" : {"$or" : [{"rating" : {"$lt" : 8}} , {"year" : {"$gt" : 2020 }}] }
+}])
+
+
+db.movies.aggregate([
+    {
+        "$match" :  {"year" : {"$not" : {"$gt" : 2014}}}
+    }
+])
+
+
+db.movies.aggregate([
+    {
+        "$match" :  {"name" :{ "$exists" : "true"}}
+    }
+])
+
+
+db.movies.aggregate([
+    {
+        "$match" :  {"director" :{ "$regex" : "^A"}}
+    }
+])
+
+
+db.movies.aggregate([
+    {
+        "$project" :  {_id : 0 , title:1 , genre : 1 , releaseYear: "$year"}
+    }
+])
+
+
+db.movies.aggregate([
+    {
+        $addFields : {ratingCatagory : {$cond : {if : {$gte : ["$rating" , 8]} , then : "Excellent" , else : "Average"}}}
+    }
+])
+
+
+// Join movies with their reviews using $lookup (placed here in the New movies section)
+// Adds a new field 'movieReviews' containing an array of matching review documents
+db.movies.aggregate([
+  {
+    $lookup: {
+      from: "reviews",
+      localField: "mid",
+      foreignField: "movie_id",
+      as: "movieReviews"
+    }
+  }
+])
+```
+
+Exercise: NEW STUDENTS
+
+```javascript
+NEW STUDENTS db.student.insertMany([
+  {
+    name: 'Raj',
+    score: 85,
+    result: 'Pass',
+    department: 'fcait',
+    gender: 'male',
+    dob: '2004-01-07'
+  },
+  {
+    name: 'Mitan',
+    score: 74,
+    result: 'Pass',
+    department: 'fcait',
+    gender: 'male',
+    dob: '2004-02-09'
+  },
+  {
+    name: 'Shaily',
+    score: 92,
+    result: 'Pass',
+    department: 'fcait',
+    gender: 'female',
+    dob: '2004-06-22'
+  },
+  {
+    name: 'Aastha',
+    score: 58,
+    result: 'Pass',
+    department: 'imca',
+    gender: 'female',
+    dob: '2004-08-08'
+  },
+  {
+    name: 'John',
+    score: 32,
+    result: 'Fail',
+    department: 'bca',
+    gender: 'male',
+    dob: '2004-03-15'
+  }
+])
+
+
+
+db.student.aggregate([
+  {
+    "$group": {
+      "_id": "$department",           
+      "studentCount": { "$sum": 1 }
+   	}
+  }
+])
+
+
+db.student.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalScore: { $sum: "$score" }
+    }
+  }
+])
+
+
+db.student.aggregate([
+  {
+    $group: {
+      _id: null,
+      averageScore: { $avg: "$score" }
+    }
+  }
+])
+
+
+db.student.aggregate([
+  {
+    $group: {
+      _id: null,
+      minScore: { $min: "$score" }
+    }
+  }
+])
+
+
+db.student.aggregate([
+  {
+    $group: {
+      _id: null,
+      maxScore: { $max: "$score" }
+    }
+  }
+])
+db.student.aggregate([
+  {
+    $count: "totalStudents"
+  }
+])
+
+
+
+db.student.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalScore: { $sum: "$score" },
+      averageScore : {$avg : "$score"},
+      studentCount : {$sum : 1}
+    }
+  }
+])
+
+
+db.student.aggregate([
+  {
+    $group: {
+      _id: "$department",
+      totalScore: { $sum: "$score" },
+      averageScore : {$avg : "$score"},
+      studentCount : {$sum : 1}
+    }
+  }
+])
 ```

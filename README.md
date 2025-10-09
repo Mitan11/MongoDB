@@ -220,7 +220,7 @@ db.student.updateMany(
 - **$pull:** Removes elements from arrays
 - **$rename:** Renames fields
 
-### Array Update Operators (push, pull, addToSet, pullAll)
+### Array Update Operators (push, pull, pullAll)
 MongoDB provides several operators specialized for updating array fields. These are essential when you need to add or remove items inside array fields without replacing the entire array.
 
 **$push (single element)**
@@ -237,22 +237,11 @@ db.students.updateOne({ name: "Bob" }, { $push: { skills: { $each: ["Go", "Rust"
 ```
 - Use `$each` to push multiple values in one operation. More efficient and atomic than multiple $push calls.
 
-**$push with $position and $slice (controlled insert / keep top N)**
+**$pushwith $position and $slice (controlled insert / keep top N)**
 ```javascript
 // Insert 'x' at the beginning of the array
 db.collection.updateOne({ _id: 1 }, { $push: { tags: { $each: ["x"], $position: 0 } } });
-
-// Push and keep only the top 5 newest elements
-db.collection.updateOne({ _id: 1 }, { $push: { history: { $each: [newEntry], $slice: -5 } } });
 ```
-- `$position` specifies the index to insert at. `$slice` can trim the array after push.
-
-**$addToSet (avoid duplicates)**
-```javascript
-// Add a value only if it doesn't already exist in the array
-db.students.updateOne({ name: "Bob" }, { $addToSet: { skills: "Go" } });
-```
-- Ensures uniqueness; if the value exists, the array is not modified.
 
 **$pull (remove matching values or by condition)**
 ```javascript
@@ -271,20 +260,8 @@ db.collection.updateOne({ _id: 1 }, { $pullAll: { tags: ["a", "b"] } });
 ```
 - `$pullAll` removes all matching elements listed in the array argument.
 
-**$pop (remove first or last element)**
-```javascript
-// Remove the first element from the array
-db.collection.updateOne({ _id: 1 }, { $pop: { items: -1 } });
-
-// Remove the last element from the array
-db.collection.updateOne({ _id: 1 }, { $pop: { items: 1 } });
-```
-- Use `-1` to remove the first element, `1` to remove the last element.
-
-
 **Notes and tips:**
 - Use `$each` when pushing multiple values to avoid multiple round-trips and to keep the operation atomic.
-- Prefer `$addToSet` when you want to maintain uniqueness in arrays.
 - Use conditional `$pull` queries (e.g., `$lt`, `$gte`) to remove items by predicate.
 - When performing many array updates, consider schema design and whether storing subdocuments or separate collections is more appropriate for performance and querying.
 
@@ -587,3 +564,87 @@ db.movie.dropIndex({title: 1})
 ```
 - **Purpose:** Removes a specified index from a collection. The argument to `dropIndex` should be the key pattern of the index to drop.
 
+### 9. Aggregation & Pipeline Topics
+
+This section summarizes common aggregation and pipeline concepts demonstrated in sample scripts: `$match`, `$project`, `$addFields`, `$group`, `$count`, `$lookup`, and related operators.
+
+#### 1) Aggregation pipeline structure
+- Use `db.collection.aggregate([ ... ])` to run a sequence of stages where each stage transforms the documents.
+- Stages run in order and include `$match`, `$group`, `$project`, `$addFields`, `$sort`, `$limit`, `$lookup`, etc.
+
+Example:
+```javascript
+db.movies.aggregate([
+  { $match: { year: { $gt: 2015 } } },
+  { $group: { _id: "$director", avgRating: { $avg: "$rating" } } },
+  { $sort: { avgRating: -1 } }
+]);
+```
+
+#### 2) Filtering documents — `$match`
+- Filters documents using standard query operators: `$gt`, `$lt`, `$gte`, `$lte`, `$in`, `$nin`, `$and`, `$or`, `$not`, `$exists`, `$regex`.
+- Use early `$match` to reduce work for later stages.
+
+Example:
+```javascript
+{ $match: { status: "Delayed" } }
+```
+
+#### 3) Projection — `$project`
+- Selects, reshapes, or renames fields for downstream stages.
+- You can include/exclude fields and compute expressions.
+
+Example:
+```javascript
+{ $project: { _id: 0, title: 1, releaseYear: "$year" } }
+```
+
+#### 4) Computed / conditional fields — `$addFields`, `$cond`
+- Use `$addFields` to add computed fields.
+- `$cond` (or `$switch`) provides conditional values based on expressions.
+
+Example:
+```javascript
+{ $addFields: { ratingCategory: { $cond: [ { $gte: ["$rating", 8] }, "Excellent", "Average" ] } } }
+```
+
+#### 5) Grouping and aggregation — `$group`
+- Aggregate values by a key using `$group` with accumulators: `$sum`, `$avg`, `$min`, `$max`, `$push`.
+
+Example:
+```javascript
+{ $group: { _id: "$airline", totalFlights: { $sum: 1 }, avgPrice: { $avg: "$price" } } }
+```
+
+#### 6) Counting documents — `$count`
+- `$count` returns a single document with the total count after prior stages.
+
+Example:
+```javascript
+{ $count: "totalFlights" }
+```
+
+#### 7) Joins — `$lookup`
+- `$lookup` performs a left outer join between collections.
+- Useful to enrich documents with related arrays from other collections.
+
+Example:
+```javascript
+{ $lookup: { from: "reviews", localField: "mid", foreignField: "movie_id", as: "movieReviews" } }
+```
+
+#### 8) Other useful aggregation stages
+- `$sort`, `$limit`, `$skip` — control result order and pagination
+- `$unwind` — deconstruct arrays into documents
+- `$replaceRoot` / `$replaceWith` — replace the root document
+- `$facet` — run multiple pipelines in parallel and collect results
+
+#### 9) Short example pipeline (find average price by airline for on-time flights)
+```javascript
+db.flights.aggregate([
+  { $match: { status: "On Time" } },
+  { $group: { _id: "$airline", avgPrice: { $avg: "$price" }, count: { $sum: 1 } } },
+  { $project: { airline: "$_id", avgPrice: 1, count: 1, _id: 0 } },
+  { $sort: { avgPrice: -1 } }
+]);
+```
