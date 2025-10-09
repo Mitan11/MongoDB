@@ -34,10 +34,102 @@ db.movies.find({ $and: [{ title: "Lagaan" }, { rating: 8.1 }] });
 db.movies.find({ year: { $not: { $lt: 2010 } } });
 
 // Regular expression examples
-db.movies.find({ title: { $regex: "^L" } });     // starts with 'L'
-db.movies.find({ title: { $regex: "i$" } });     // ends with 'i'
-db.movies.find({ title: { $regex: "xyz" } });    // contains 'xyz'
-db.movies.find({ title: { $regex: "^3.*s$" } }); // starts with '3' and ends with 's'
+
+db.movies.find({title : {$regex : "^L"}})
+
+db.movies.find({title : {$regex : "A$"}})
+
+db.movies.find({title : {$regex : "A$" , $options : 'i'}})
+
+db.movies.find({title : {$regex : "an"}})
+
+db.movies.find({title : {$regex : "^3.*s$"}})
+
+db.movies.find({title : { $regex: "^.{8}$"}})
+
+db.movies.find({ title : { $regex: "^S.{7}$"}})
+
+db.movies.find({genre : "Drama"})
+
+db.movies.find({director : "Rajkumar Hirani"},{_id: 0,title : 1, year : 1})
+
+db.movies.find({$and : [{$or : [{ rating: {$gte : 8.2} }]} , {year : {$lt : 2010}}]})
+
+db.movies.find({year : {$gt : 2000}}).sort({year : 1})
+
+db.movies.find({} , {_id: 0,title : 1, genre : 1 , rating : 1})
+
+db.movies.find().sort({director : 1})
+
+db.movies.find().limit(2)
+
+db.movies.find().limit(2).skip(1)
+
+db.movies.find({$or : [{director : "Zoya Akhtar"} , {rating :{$lt: 8.0}}]})
+
+db.movies.find({$and: [{ genre: "Drama" },{ genre: "Sports" }]})
+
+db.movies.find({rating : {$ne : 8.1 }})
+
+db.movies.find({$and: [{ year: {$gt : 2000} },{ year: {$lt : 2010} }]})
+
+db.movies.find({title : {$regex : "^G"}})
+
+db.movies.find({title : {$regex : "India$"}})
+
+db.movies.find({title : {$regex : "Boy"}})
+
+db.movies.find({
+    title: { $regex: /^[^\s]+ [^\s]+$/ }
+})
+
+db.movies.aggregate([
+    { $unwind: "$genre" },                   // split array into separate documents
+    { $group: { _id: "$genre", total: { $sum: 1 } } } // count each genre
+  ])
+
+db.movies.aggregate([
+    {$match: {year : {$gt : 2000}}},
+    { $group:{ _id : null , avgRating: {$avg : "$rating"}} },
+])
+
+db.movies.aggregate([
+    { $sort: { rating: -1 } },  // sort descending by rating
+    { $limit: 1 }               // take the top movie
+])
+
+db.movies.aggregate([
+    { $group:{ _id : "$director" , avgRating: {$avg : "$rating"}} },
+])
+
+db.movies.updateOne({title : "Gully Boy"} , {$set : {rating : 8.0}})
+
+db.movies.updateMany(
+  {},                     // empty filter → applies to all documents
+  { $set: { language: "Hindi" } } // add new field
+)
+
+db.movies.updateMany(
+  {},  // match all documents
+  { $rename: { "rating": "imdb_rating" } } // rename field
+)
+
+db.movies.updateMany(
+    { year: {$lt : 2010} },
+    { $inc: { imdb_rating: 0.1 } }  // increment rating by 0.1
+)
+
+// db.movies.updateMany(
+//   {},                 // match all documents
+//   { $unset: { rating: "" } } // remove the rating field
+// )
+
+db.movies.deleteMany({year: {$lt : 1980}})
+
+db.movies.deleteOne({title:"Lagaan"})
+
+db.movies.deleteMany({rating: {$lt : 8.0}})
+
 ```
 
 Exercise: Menu items collection
