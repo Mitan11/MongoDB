@@ -729,3 +729,75 @@ db.flights.aggregate([
   { $sort: { avgPrice: -1 } }
 ]);
 ```
+
+### 10. MapReduce (practical implementation)
+
+MapReduce lets you run custom map (emit) and reduce (aggregate) JavaScript functions over large datasets and write the result to an output collection.
+
+Note: For most new use cases, prefer the Aggregation Pipeline for performance and simplicity. MapReduce remains useful when you need custom JS logic.
+
+#### Example A: Total copies per author (Library)
+
+What this does
+- Input collection: `Library` with fields `{ title, author, copies }`
+- Map function: For each document, emit a key-value pair `(author, copies)`
+- Reduce function: For each author key, sum all the `copies` values
+- Output: A new collection `Total_copies_per_author` containing one document per author with total copies
+
+Code
+```javascript
+// Create and seed collection
+db.createCollection("Library")
+
+db.Library.insertMany([
+ { id : 1, title : "The Silent River", author:"R.K. Narayan" , copies : 5},
+ { id : 2, title : "Malgudi Days", author:"R.K. Narayan" , copies : 8},
+ { id : 3, title : "Train to Pakistan", author:"Khushwant Singh" , copies : 4},
+ { id : 4, title : "The Guide", author:"R.K. Narayan" , copies : 6},
+ { id : 5, title : "Godan", author:"Munshi Premchand" , copies : 10},
+ { id : 6, title : "Gaban", author:"Munshi Premchand" , copies : 7}
+])
+
+// Map: emit (author, copies)
+var mapFunction = function(){
+  emit(this.author, this.copies);
+};
+
+// Reduce: sum copies per author
+var reduceFunction = function(author, copies){
+  return Array.sum(copies);
+};
+
+// Run MapReduce -> writes to a new output collection
+db.Library.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "Total_copies_per_author" }
+)
+
+// View results (documents look like: { _id: <author>, value: <sum> })
+db.Total_copies_per_author.find().pretty()
+```
+
+Sample result (for the seeded data)
+```javascript
+{ "_id" : "R.K. Narayan",        "value" : 19 }
+{ "_id" : "Khushwant Singh",     "value" : 4 }
+{ "_id" : "Munshi Premchand",    "value" : 17 }
+```
+
+Explanation
+- Map phase: For each document in `Library`, `emit(this.author, this.copies)` produces key–value pairs like `("R.K. Narayan", 8)`. One document can emit one or more pairs; here it’s one per doc.
+- Reduce phase: For each author key, MongoDB calls `reduceFunction(author, copiesArray)` with all emitted numeric values for that author, and returns their sum via `Array.sum(copiesArray)`.
+- Output: Results are written to a new collection `Total_copies_per_author`, where each document has shape `{ _id: <author>, value: <sumOfCopies> }`.
+- Verify: You can sort results to see largest totals first: `db.Total_copies_per_author.find().sort({ value: -1 })`.
+- Edge cases: Ensure `copies` is numeric for every document. Null/strings won’t sum correctly; clean or cast data before running.
+- Note: Prefer Aggregation Pipeline for most sum-and-group tasks; MapReduce is useful when you need custom JavaScript logic.
+
+Aggregation pipeline equivalent (faster and simpler)
+```javascript
+db.Library.aggregate([
+  { $group: { _id: "$author", value: { $sum: "$copies" } } },
+  { $sort: { value: -1 } }
+])
+```

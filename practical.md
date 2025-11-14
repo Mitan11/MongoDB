@@ -622,3 +622,108 @@ db.student.aggregate([
   }
 ])
 ```
+
+Exercise: MapReduce (Library and Sales)
+
+```javascript
+// Create Library collection and insert documents
+db.createCollection("Library")
+
+db.Library.insertMany([
+ { id : 1, title : "The Silent River", author:"R.K. Narayan" , copies : 5},
+ { id : 2, title : "Malgudi Days", author:"R.K. Narayan" , copies : 8},
+ { id : 3, title : "Train to Pakistan", author:"Khushwant Singh" , copies : 4},
+ { id : 4, title : "The Guide", author:"R.K. Narayan" , copies : 6},
+ { id : 5, title : "Godan", author:"Munshi Premchand" , copies : 10},
+ { id : 6, title : "Gaban", author:"Munshi Premchand" , copies : 7}
+])
+
+var mapFunction = function(){
+    emit(this.author , this.copies);
+}
+
+var reduceFunction = function(author , copies){
+    return Array.sum(copies)
+}
+
+db.Library.mapReduce(
+    mapFunction,
+    reduceFunction,
+    { out : "Total_copies_per_author"}
+)
+
+db.Total_copies_per_author.find().pretty()
+
+// Create salesData collection and insert documents
+db.createCollection("salesData")
+
+db.salesData.insertMany([
+ {id:1 , product:"Pen" , category:"Stationery" , quantity:10 , price : 5},
+ {id:2 , product:"Notebook" , category:"Stationery" , quantity:4 , price : 50},
+ {id:3 , product:"Mouse" , category:"Electronics" , quantity:3 , price : 400},
+ {id:4 , product:"Keyboard" , category:"Electronics" , quantity:2 , price : 600},
+ {id:5 , product:"Pencil" , category:"Stationery" , quantity:20 , price : 3},
+ {id:6 , product:"Charger" , category:"Electronics" , quantity:5 , price : 300}
+])
+
+var salesmapFunction = function() {
+    emit(this.category,this.quantity * this.price);
+}
+
+var salesreduceFunction = function(category, sales) {
+    return Array.sum(sales);
+}
+
+db.salesData.mapReduce(
+    salesmapFunction,
+    salesreduceFunction,
+    { out : "Total_Sales"}
+)
+
+db.Total_Sales.find().pretty()
+```
+
+Exercise: Order log (extract date parts and analyze)
+
+```javascript
+// Create the collection
+db.createCollection("orderlog")
+
+// Seed orders with UTC timestamps (ISODate)
+db.orderlog.insertMany([
+  { id: 1,  orderdate: ISODate("2025-11-01T10:00:00Z") },
+  { id: 2,  orderdate: ISODate("2025-11-02T12:30:00Z") },
+  { id: 3,  orderdate: ISODate("2025-11-03T09:15:00Z") },
+  { id: 4,  orderdate: ISODate("2025-11-04T15:45:00Z") },
+  { id: 5,  orderdate: ISODate("2025-11-05T18:10:00Z") },
+  { id: 6,  orderdate: ISODate("2025-11-06T14:20:00Z") },
+  { id: 7,  orderdate: ISODate("2025-11-07T11:05:00Z") },
+  { id: 8,  orderdate: ISODate("2025-11-08T08:55:00Z") },
+  { id: 9,  orderdate: ISODate("2025-11-09T17:40:00Z") },
+  { id: 10, orderdate: ISODate("2025-11-10T19:30:00Z") }
+])
+
+// Extract date parts: year, month, day-of-month, day-of-week, and hour
+// Note: $dayOfWeek returns 1=Sunday .. 7=Saturday; times are evaluated in UTC by default
+db.orderlog.aggregate([
+  {
+    $project: {
+      id: 1,
+      orderdate: 1,
+      year: { $year: "$orderdate" },
+      month: { $month: "$orderdate" },
+      day: { $dayOfMonth: "$orderdate" },
+      weekday: { $dayOfWeek: "$orderdate" }, // 1 = Sunday, 7 = Saturday
+      hour: { $hour: "$orderdate" }
+    }
+  }
+])
+
+// Filter orders within a date range (inclusive start, exclusive end)
+db.orderlog.find({
+  orderdate: {
+    $gte: ISODate("2025-11-03T00:00:00Z"),
+    $lt:  ISODate("2025-11-06T00:00:00Z")
+  }
+})
+
