@@ -1,22 +1,16 @@
 const { MongoClient } = require("mongodb");
 
-// Connection URL (adjust if your MongoDB runs elsewhere)
 const url = "mongodb://127.0.0.1:27017";
 const client = new MongoClient(url);
 
-// Database and collection names
-const dbName = "studentDatabase";
-const collectionName = "studentInfo";
-
 async function main() {
     try {
-        // Connect to MongoDB
+        
         await client.connect();
         console.log("Connected successfully to MongoDB");
 
-        // Access database and collection
-        const db = client.db(dbName);
-        const collection = db.collection(collectionName);
+        const db = client.db("studentDatabase");
+        const collection = db.collection("studentInfo");
 
         // --- CREATE --- Insert sample students
         const insertResult = await collection.insertMany([
@@ -44,11 +38,16 @@ async function main() {
         // --- FINAL READ --- Show remaining students
         const finalStudents = await collection.find().toArray();
         console.log("Final Students List:", finalStudents);
+
     } catch (err) {
+
         console.error("Error:", err);
+        
     } finally {
+
         await client.close();
         console.log("Connection closed");
+        
     }
 }
 
