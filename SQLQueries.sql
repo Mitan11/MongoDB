@@ -618,7 +618,7 @@ SELECT
     a.AppointmentID,
     a.BillAmount 
 FROM 
-    patient AS p, appointment a  
+    patient p, appointment a  
 WHERE 
     a.BillAmount > (SELECT AVG(BillAmount) FROM appointment);
 
